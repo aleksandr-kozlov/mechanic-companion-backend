@@ -1,0 +1,202 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  workshopName  String?   @map("workshop_name")
+  phone         String?
+  address       String?
+  logoUrl       String?   @map("logo_url")
+  signatureUrl  String?   @map("signature_url")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  cars          Car[]
+  refreshTokens RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+  @@index([userId])
+  @@index([token])
+}
+
+model Car {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  licensePlate   String    @map("license_plate")
+  brand          String
+  model          String
+  year           Int?
+  vin            String?
+  ownerName      String?   @map("owner_name")
+  ownerPhone     String?   @map("owner_phone")
+  ownerEmail     String?   @map("owner_email")
+  mainPhotoUrl   String?   @map("main_photo_url")
+  notes          String?
+  lastVisitDate  DateTime? @map("last_visit_date")
+  visitsCount    Int       @default(0) @map("visits_count")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos    CarPhoto[]
+  documents CarDocument[]
+  visits    Visit[]
+
+  @@unique([userId, licensePlate])
+  @@map("cars")
+  @@index([userId])
+  @@index([licensePlate])
+}
+
+model CarPhoto {
+  id        String   @id @default(uuid())
+  carId     String   @map("car_id")
+  photoUrl  String   @map("photo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  car Car @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@map("car_photos")
+  @@index([carId])
+}
+
+model CarDocument {
+  id           String   @id @default(uuid())
+  carId        String   @map("car_id")
+  documentUrl  String   @map("document_url")
+  documentName String   @map("document_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  car Car @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@map("car_documents")
+  @@index([carId])
+}
+
+enum WorkType {
+  DETAILING
+  MAINTENANCE
+  REPAIR
+  DIAGNOSTICS
+  TIRE_SERVICE
+  OTHER
+}
+
+enum VisitStatus {
+  IN_PROGRESS
+  COMPLETED
+  DELIVERED
+  CANCELLED
+}
+
+model Visit {
+  id                      String       @id @default(uuid())
+  carId                   String       @map("car_id")
+  visitDate               DateTime     @map("visit_date")
+  workType                WorkType     @map("work_type")
+  workDescription         String       @map("work_description")
+  estimatedCost           Decimal?     @map("estimated_cost") @db.Decimal(10, 2)
+  finalCost               Decimal?     @map("final_cost") @db.Decimal(10, 2)
+  estimatedCompletionDate DateTime?    @map("estimated_completion_date")
+  status                  VisitStatus  @default(IN_PROGRESS)
+  fuelLevel               Int?         @map("fuel_level")
+  mileage                 Int?
+  hasDamages              Boolean      @default(false) @map("has_damages")
+  damagesDescription      String?      @map("damages_description")
+  personalItems           String?      @map("personal_items")
+  tireCondition           String?      @map("tire_condition")
+  createdAt               DateTime     @default(now()) @map("created_at")
+  updatedAt               DateTime     @updatedAt @map("updated_at")
+
+  car       Car              @relation(fields: [carId], references: [id], onDelete: Cascade)
+  photos    VisitPhoto[]
+  materials VisitMaterial[]
+  documents VisitDocument[]
+
+  @@map("visits")
+  @@index([carId])
+  @@index([status])
+}
+
+enum PhotoType {
+  BEFORE
+  AFTER
+}
+
+model VisitPhoto {
+  id        String    @id @default(uuid())
+  visitId   String    @map("visit_id")
+  photoUrl  String    @map("photo_url")
+  photoType PhotoType @map("photo_type")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@map("visit_photos")
+  @@index([visitId])
+}
+
+model VisitMaterial {
+  id        String   @id @default(uuid())
+  visitId   String   @map("visit_id")
+  name      String
+  quantity  Decimal  @db.Decimal(10, 2)
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@map("visit_materials")
+  @@index([visitId])
+}
+
+model VisitDocument {
+  id           String   @id @default(uuid())
+  visitId      String   @map("visit_id")
+  documentUrl  String   @map("document_url")
+  documentName String   @map("document_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@map("visit_documents")
+  @@index([visitId])
+}
