@@ -10,7 +10,7 @@
 
 ## 📊 ТЕКУЩИЙ СТАТУС ПРОЕКТА
 
-**Последнее обновление**: 04 февраля 2026
+**Последнее обновление**: 04 февраля 2026 (20:35)
 
 ### ✅ Фаза 1: Инфраструктура и базовая настройка - ЗАВЕРШЕНА
 
@@ -26,22 +26,71 @@
 - ✅ Созданы директории для uploads и temp файлов
 - ✅ Базовая структура проекта готова
 
+### ✅ Фаза 2: Авторизация и безопасность - ЗАВЕРШЕНА
+
+**Что сделано:**
+- ✅ Создан Auth модуль со всей структурой (dto, guards, strategies, decorators)
+- ✅ Реализованы все DTOs с валидацией (register, login, refresh, forgot/reset password)
+- ✅ Настроены JWT стратегии (access token 1h, refresh token 7d)
+- ✅ Созданы Guards (JwtAuthGuard, JwtRefreshGuard)
+- ✅ Реализован декоратор @CurrentUser для извлечения пользователя
+- ✅ AuthService с полной бизнес-логикой:
+  - Регистрация с bcrypt хешированием (10 rounds)
+  - Логин с проверкой credentials
+  - Refresh token rotation (старый удаляется, создается новый)
+  - Forgot password с генерацией токена (действителен 1 час)
+  - Reset password с инвалидацией всех refresh tokens
+- ✅ AuthController с endpoints:
+  - `POST /api/auth/register`
+  - `POST /api/auth/login`
+  - `POST /api/auth/refresh`
+  - `POST /api/auth/forgot-password`
+  - `POST /api/auth/reset-password`
+  - `GET /api/auth/me` (защищен JWT)
+- ✅ HttpExceptionFilter для централизованной обработки ошибок
+- ✅ TransformInterceptor для стандартизации ответов API
+- ✅ Rate limiting: register/login (5/мин), forgot password (3/мин), общее (100/мин)
+- ✅ Все endpoints протестированы (позитивные и негативные сценарии)
+
 **Структура проекта:**
 ```
 MechanicCompanionBackend/
 ├── src/
+│   ├── auth/
+│   │   ├── dto/
+│   │   │   ├── register.dto.ts
+│   │   │   ├── login.dto.ts
+│   │   │   ├── refresh-token.dto.ts
+│   │   │   ├── forgot-password.dto.ts
+│   │   │   └── reset-password.dto.ts
+│   │   ├── guards/
+│   │   │   ├── jwt-auth.guard.ts
+│   │   │   └── jwt-refresh.guard.ts
+│   │   ├── strategies/
+│   │   │   ├── jwt.strategy.ts
+│   │   │   └── jwt-refresh.strategy.ts
+│   │   ├── decorators/
+│   │   │   └── current-user.decorator.ts
+│   │   ├── auth.controller.ts
+│   │   ├── auth.service.ts
+│   │   └── auth.module.ts
+│   ├── common/
+│   │   ├── filters/
+│   │   │   └── http-exception.filter.ts
+│   │   └── interceptors/
+│   │       └── transform.interceptor.ts
 │   ├── config/          # Конфигурация (configuration.ts, file-upload.config.ts)
-│   ├── common/          # Общие файлы (filters, interceptors, pipes, decorators)
 │   ├── prisma/          # Prisma модуль и сервис
-│   ├── app.module.ts    # Главный модуль с ConfigModule, PrismaModule, ThrottlerModule
+│   ├── app.module.ts    # Главный модуль (ConfigModule, PrismaModule, ThrottlerModule, AuthModule)
 │   ├── app.controller.ts
 │   ├── app.service.ts
-│   └── main.ts          # Entry point с security (Helmet, CORS, Compression)
+│   └── main.ts          # Entry point с security, filters, interceptors
 ├── prisma/
 │   └── schema.prisma    # Полная схема БД с 11 моделями
 ├── .env / .env.example
 ├── Dockerfile
 ├── docker-compose.yml
+├── CLAUDE.md            # Документация для Claude Code
 └── package.json
 ```
 
@@ -50,8 +99,10 @@ MechanicCompanionBackend/
 - Prisma: 6.19.2
 - TypeScript: 5.9.3
 - Node: 20 (Alpine для Docker)
+- bcrypt: 6.0.0
+- passport-jwt: 4.0.1
 
-**Следующий шаг:** Фаза 2 - Авторизация (Auth Module)
+**Следующий шаг:** Фаза 3 - Модуль автомобилей (Cars)
 
 ---
 
@@ -1893,13 +1944,18 @@ docker-compose exec postgres psql -U postgres -d mechanic_companion # Подкл
 
 **Примечание:** Миграции будут применены при первом запуске с БД командой `npx prisma migrate dev --name init`
 
-### Фаза 2: Авторизация ⬜
-- [ ] Auth module создан
-- [ ] Register endpoint работает
-- [ ] Login endpoint работает
-- [ ] Refresh token работает
-- [ ] JWT guards настроены
-- [ ] Forgot/reset password работают
+### Фаза 2: Авторизация ✅ (ЗАВЕРШЕНА 04.02.2026)
+- [x] Auth module создан (dto, guards, strategies, decorators)
+- [x] Register endpoint работает (с bcrypt хешированием)
+- [x] Login endpoint работает (с валидацией credentials)
+- [x] Refresh token работает (с rotation механизмом)
+- [x] JWT guards настроены (JwtAuthGuard, JwtRefreshGuard)
+- [x] Forgot/reset password работают (с токеном на 1 час)
+- [x] Декоратор @CurrentUser создан
+- [x] HttpExceptionFilter для обработки ошибок
+- [x] TransformInterceptor для стандартизации ответов
+- [x] Rate limiting настроен (5/мин для auth endpoints)
+- [x] Все endpoints протестированы
 
 ### Фаза 3: Автомобили ⬜
 - [ ] Cars CRUD endpoints созданы
