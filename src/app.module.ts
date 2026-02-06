@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { CarsModule } from './cars/cars.module';
+import { VisitsModule } from './visits/visits.module';
+import { MaterialsModule } from './materials/materials.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -29,6 +31,10 @@ import configuration from './config/configuration';
     AuthModule,
     // Cars
     CarsModule,
+    // Visits
+    VisitsModule,
+    // Materials
+    MaterialsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

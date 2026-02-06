@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CarsService } from './cars.service';
+import { VisitsService } from '../visits/visits.service';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 import { QueryCarsDto } from './dto/query-cars.dto';
@@ -24,7 +25,10 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @Controller('cars')
 @UseGuards(JwtAuthGuard)
 export class CarsController {
-  constructor(private readonly carsService: CarsService) {}
+  constructor(
+    private readonly carsService: CarsService,
+    private readonly visitsService: VisitsService,
+  ) {}
 
   /**
    * GET /api/cars - Получить список автомобилей
@@ -181,5 +185,16 @@ export class CarsController {
     @CurrentUser('id') userId: string,
   ) {
     return this.carsService.deleteDocument(id, userId);
+  }
+
+  /**
+   * GET /api/cars/:carId/visits - Получить визиты конкретного автомобиля
+   */
+  @Get(':carId/visits')
+  async getVisits(
+    @Param('carId') carId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.visitsService.findByCarId(carId, userId);
   }
 }
