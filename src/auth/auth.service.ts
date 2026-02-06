@@ -8,6 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
@@ -19,6 +20,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private mailService: MailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -172,11 +174,8 @@ export class AuthService {
       },
     });
 
-    // TODO: Отправка email с токеном (будет реализовано в Phase 6)
-    // await this.mailService.sendPasswordResetEmail(user.email, resetToken);
-
-    console.log(`Password reset token for ${email}: ${resetToken}`);
-    console.log(`Reset link: ${this.configService.get('appUrl')}/reset-password?token=${resetToken}`);
+    // Отправка email с токеном
+    await this.mailService.sendPasswordResetEmail(user.email, resetToken);
 
     return {
       success: true,
