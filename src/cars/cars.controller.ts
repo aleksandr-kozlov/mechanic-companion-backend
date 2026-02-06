@@ -14,6 +14,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { CarsService } from './cars.service';
 import { VisitsService } from '../visits/visits.service';
 import { CreateCarDto } from './dto/create-car.dto';
@@ -22,6 +29,8 @@ import { QueryCarsDto } from './dto/query-cars.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('Cars')
+@ApiBearerAuth('JWT-auth')
 @Controller('cars')
 @UseGuards(JwtAuthGuard)
 export class CarsController {

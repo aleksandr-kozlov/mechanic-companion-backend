@@ -19,6 +19,13 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { VisitsService } from './visits.service';
 import { CreateVisitDto } from './dto/create-visit.dto';
 import { UpdateVisitDto } from './dto/update-visit.dto';
@@ -31,6 +38,8 @@ import { PhotoType } from '@prisma/client';
 import { PdfService } from '../pdf/pdf.service';
 import { MailService } from '../mail/mail.service';
 
+@ApiTags('Visits')
+@ApiBearerAuth('JWT-auth')
 @Controller('visits')
 @UseGuards(JwtAuthGuard)
 export class VisitsController {
