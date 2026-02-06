@@ -9,6 +9,7 @@ import { CarsModule } from './cars/cars.module';
 import { VisitsModule } from './visits/visits.module';
 import { MaterialsModule } from './materials/materials.module';
 import { MailModule } from './mail/mail.module';
+import { PdfModule } from './pdf/pdf.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -38,6 +39,8 @@ import configuration from './config/configuration';
     MaterialsModule,
     // Mail
     MailModule,
+    // PDF
+    PdfModule,
   ],
   controllers: [AppController],
   providers: [AppService],

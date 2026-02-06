@@ -202,7 +202,35 @@ MechanicCompanionBackend/
 - ✅ Интеграция в AppModule и AuthModule
 - ✅ Успешная сборка проекта
 
-**Следующий шаг:** Фаза 7 - Генерация PDF отчётов
+### ✅ Фаза 7: Генерация PDF отчётов - ЗАВЕРШЕНА
+
+**Что сделано:**
+- ✅ Создан PDF модуль (`src/pdf/`)
+- ✅ Реализован PdfService с методом `generateVisitReportPDF()`:
+  - Генерация PDF из HTML с помощью Puppeteer
+  - Рендеринг Handlebars шаблонов
+  - Кэширование скомпилированных шаблонов
+  - Конвертация путей к файлам в file:// URLs для Puppeteer
+  - Форматирование данных и перевод enum'ов на русский
+- ✅ Создан HTML шаблон `visit-report.html`:
+  - Шапка с логотипом и информацией о мастерской
+  - Информация об автомобиле и владельце
+  - Детали визита с цветными status badges
+  - Чек-лист приёмки (топливо, пробег, повреждения, личные вещи, шины)
+  - Фото ДО и ПОСЛЕ (grid layout)
+  - Таблица материалов с расчётом итогов
+  - Стоимость работ (планируемая и итоговая)
+  - Подпись мастера
+  - Оптимизирован для печати (page-break-inside: avoid, точные цвета)
+- ✅ Добавлен DTO `SendReportDto` для отправки отчётов
+- ✅ Добавлены endpoints в VisitsController:
+  - `GET /api/visits/:id/export-pdf` - скачать PDF отчёт
+  - `POST /api/visits/:id/send-report` - отправить PDF на email
+- ✅ Интегрирован PdfModule в VisitsModule и AppModule
+- ✅ Интегрирован MailService для отправки PDF
+- ✅ Успешная сборка проекта
+
+**Следующий шаг:** Фаза 8 - Profile модуль
 
 ---
 
@@ -1058,7 +1086,7 @@ src/pdf/
 ```
 
 **Endpoints:**
-- [ ] `GET /api/visits/:id/export-pdf` - генерация и возврат PDF
+- [x] `GET /api/visits/:id/export-pdf` - генерация и возврат PDF
   - Проверка прав доступа
   - Генерация PDF
   - Возврат файла с headers:
@@ -1067,7 +1095,7 @@ src/pdf/
     Content-Disposition: attachment; filename="visit-{id}-{date}.pdf"
     ```
 
-- [ ] `POST /api/visits/:id/send-report` - генерация + отправка на email
+- [x] `POST /api/visits/:id/send-report` - генерация + отправка на email
   - Body: `{ email: string }`
   - Валидация email формата
   - Генерация PDF
@@ -2089,11 +2117,13 @@ docker-compose exec postgres psql -U postgres -d mechanic_companion # Подкл
 - [x] Шаблоны красивые (Handlebars с responsive HTML)
 - [x] Логирование и error handling
 
-### Фаза 7: PDF ⬜
-- [ ] PDF generation работает
-- [ ] Шаблон красивый
-- [ ] Фото встраиваются
-- [ ] Send report endpoint работает
+### Фаза 7: PDF ✅ (ЗАВЕРШЕНА 06.02.2026)
+- [x] PDF generation работает (Puppeteer + Handlebars)
+- [x] Шаблон красивый (профессиональный дизайн с grid layout)
+- [x] Фото встраиваются (file:// URLs для before/after photos)
+- [x] Export PDF endpoint работает (GET /api/visits/:id/export-pdf)
+- [x] Send report endpoint работает (POST /api/visits/:id/send-report)
+- [x] Интеграция в VisitsModule и AppModule
 
 ### Фаза 8: Профиль ⬜
 - [ ] Profile endpoints работают

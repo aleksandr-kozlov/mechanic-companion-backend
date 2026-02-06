@@ -13,21 +13,32 @@ import {
   UploadedFiles,
   UploadedFile,
   BadRequestException,
+  Res,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { VisitsService } from './visits.service';
 import { CreateVisitDto } from './dto/create-visit.dto';
 import { UpdateVisitDto } from './dto/update-visit.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { QueryVisitsDto } from './dto/query-visits.dto';
+import { SendReportDto } from './dto/send-report.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PhotoType } from '@prisma/client';
+import { PdfService } from '../pdf/pdf.service';
+import { MailService } from '../mail/mail.service';
 
 @Controller('visits')
 @UseGuards(JwtAuthGuard)
 export class VisitsController {
-  constructor(private readonly visitsService: VisitsService) {}
+  constructor(
+    private readonly visitsService: VisitsService,
+    private readonly pdfService: PdfService,
+    private readonly mailService: MailService,
+  ) {}
 
   /**
    * GET /api/visits - Получить все визиты пользователя
@@ -211,5 +222,67 @@ export class VisitsController {
     @CurrentUser('id') userId: string,
   ) {
     return this.visitsService.deleteDocument(id, userId);
+  }
+
+  /**
+   * GET /api/visits/:id/export-pdf - Экспортировать отчёт о визите в PDF
+   */
+  @Get(':id/export-pdf')
+  async exportPdf(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser() user: any,
+    @Res() res: Response,
+  ) {
+    // Получить полные данные визита
+    const visit = await this.visitsService.findOne(id, userId);
+
+    // Генерировать PDF
+    const pdfBuffer = await this.pdfService.generateVisitReportPDF(
+      visit,
+      user,
+    );
+
+    // Установить заголовки для скачивания файла
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="visit-report-${id.substring(0, 8)}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
+  }
+
+  /**
+   * POST /api/visits/:id/send-report - Отправить отчёт о визите на email
+   */
+  @Post(':id/send-report')
+  @HttpCode(HttpStatus.OK)
+  async sendReport(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser() user: any,
+    @Body() sendReportDto: SendReportDto,
+  ) {
+    // Получить полные данные визита
+    const visit = await this.visitsService.findOne(id, userId);
+
+    // Генерировать PDF
+    const pdfBuffer = await this.pdfService.generateVisitReportPDF(
+      visit,
+      user,
+    );
+
+    // Отправить email с PDF
+    await this.mailService.sendVisitReportEmail(
+      sendReportDto.email,
+      visit,
+      pdfBuffer,
+    );
+
+    return {
+      success: true,
+      message: `Отчёт успешно отправлен на ${sendReportDto.email}`,
+    };
   }
 }
