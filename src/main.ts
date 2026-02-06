@@ -5,9 +5,11 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import compression from 'compression';
 import helmet from 'helmet';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Security
   app.use(helmet());
@@ -21,6 +23,11 @@ async function bootstrap() {
 
   // Global prefix
   app.setGlobalPrefix(process.env.API_PREFIX || 'api');
+
+  // Static files - serve uploaded files
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/api/files/',
+  });
 
   // Global validation pipe
   app.useGlobalPipes(

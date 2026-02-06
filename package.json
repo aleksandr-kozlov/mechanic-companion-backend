@@ -29,6 +29,7 @@
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.1.13",
     "@nestjs/jwt": "^11.0.2",
+    "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.13",
     "@nestjs/throttler": "^6.5.0",
@@ -47,7 +48,8 @@
     "puppeteer": "^24.36.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.16",
@@ -58,6 +60,7 @@
     "@types/node": "^25.2.0",
     "@types/nodemailer": "^7.0.9",
     "@types/passport-jwt": "^4.0.1",
+    "@types/uuid": "^11.0.0",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "dotenv": "^17.2.3",
