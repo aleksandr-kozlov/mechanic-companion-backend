@@ -230,7 +230,31 @@ MechanicCompanionBackend/
 - ✅ Интегрирован MailService для отправки PDF
 - ✅ Успешная сборка проекта
 
-**Следующий шаг:** Фаза 8 - Profile модуль
+### ✅ Фаза 8: Профиль пользователя - ЗАВЕРШЕНА
+
+**Что сделано:**
+- ✅ Создан Profile модуль (`src/profile/`)
+- ✅ Созданы DTOs с валидацией:
+  - `UpdateProfileDto` - обновление workshopName, phone, address
+  - `ChangePasswordDto` - смена пароля с валидацией старого
+- ✅ Реализован ProfileService с методами:
+  - `getProfile()` - получение профиля без пароля и токенов
+  - `updateProfile()` - обновление информации о мастерской
+  - `changePassword()` - смена пароля с инвалидацией всех refresh tokens
+  - `uploadLogo()` - загрузка логотипа с сжатием до 400x400
+  - `uploadSignature()` - загрузка подписи с сжатием до 300x100 (PNG с прозрачностью)
+- ✅ Реализован ProfileController с 5 endpoints:
+  - `GET /api/profile` - получить профиль
+  - `PUT /api/profile` - обновить профиль
+  - `PUT /api/profile/password` - сменить пароль
+  - `POST /api/profile/logo` - загрузить логотип
+  - `POST /api/profile/signature` - загрузить подпись
+- ✅ Валидация файлов (размер, формат)
+- ✅ Автоматическое удаление старых файлов при загрузке новых
+- ✅ Интеграция в AppModule
+- ✅ Успешная сборка проекта
+
+**Следующий шаг:** Фаза 9 - Финальная настройка и тестирование
 
 ---
 
@@ -1432,29 +1456,29 @@ src/profile/
 ```
 
 **Endpoints:**
-- [ ] `GET /api/profile` - получение профиля
+- [x] `GET /api/profile` - получение профиля
   - Возврат User без password и refreshTokens
 
-- [ ] `PUT /api/profile` - обновление профиля
+- [x] `PUT /api/profile` - обновление профиля
   - Обновляемые поля: workshopName, phone, address
   - Валидация телефона (российский формат)
   - Возврат обновлённого профиля
 
-- [ ] `PUT /api/profile/password` - смена пароля
+- [x] `PUT /api/profile/password` - смена пароля
   - Body: `{ oldPassword, newPassword }`
   - Валидация старого пароля
   - Хеширование нового пароля
-  - Инвалидация всех refresh tokens (опционально)
+  - Инвалидация всех refresh tokens
   - Возврат `{ success: true }`
 
-- [ ] `POST /api/profile/logo` - загрузка логотипа
+- [x] `POST /api/profile/logo` - загрузка логотипа
   - Multipart upload
   - Сжатие до 400x400
   - Удаление старого логотипа
   - Обновление logoUrl
   - Возврат `{ logoUrl }`
 
-- [ ] `POST /api/profile/signature` - загрузка подписи
+- [x] `POST /api/profile/signature` - загрузка подписи
   - Multipart upload
   - Прозрачный PNG
   - Сжатие до 300x100
@@ -2125,10 +2149,13 @@ docker-compose exec postgres psql -U postgres -d mechanic_companion # Подкл
 - [x] Send report endpoint работает (POST /api/visits/:id/send-report)
 - [x] Интеграция в VisitsModule и AppModule
 
-### Фаза 8: Профиль ⬜
-- [ ] Profile endpoints работают
-- [ ] Change password работает
-- [ ] Logo/signature upload работают
+### Фаза 8: Профиль ✅ (ЗАВЕРШЕНА 06.02.2026)
+- [x] Profile endpoints работают (GET, PUT /api/profile)
+- [x] Change password работает (PUT /api/profile/password с инвалидацией refresh tokens)
+- [x] Logo upload работает (POST /api/profile/logo, сжатие до 400x400)
+- [x] Signature upload работает (POST /api/profile/signature, сжатие до 300x100, PNG)
+- [x] Валидация и автоматическое удаление старых файлов
+- [x] Интеграция в AppModule
 
 ### Фаза 9: Финализация ⬜
 - [ ] Security настроена (Helmet, CORS, Rate limiting)

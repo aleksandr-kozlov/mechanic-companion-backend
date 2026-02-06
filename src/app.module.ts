@@ -10,6 +10,7 @@ import { VisitsModule } from './visits/visits.module';
 import { MaterialsModule } from './materials/materials.module';
 import { MailModule } from './mail/mail.module';
 import { PdfModule } from './pdf/pdf.module';
+import { ProfileModule } from './profile/profile.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -41,6 +42,8 @@ import configuration from './config/configuration';
     MailModule,
     // PDF
     PdfModule,
+    // Profile
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
