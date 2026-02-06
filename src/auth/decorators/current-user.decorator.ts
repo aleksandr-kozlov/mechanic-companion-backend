@@ -13,8 +13,16 @@ export interface CurrentUserData {
 }
 
 export const CurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): CurrentUserData => {
+  (data: keyof CurrentUserData | undefined, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
-    return request.user;
+    const user = request.user;
+
+    // Если указан конкретный ключ, возвращаем значение этого поля
+    if (data) {
+      return user?.[data];
+    }
+
+    // Иначе возвращаем весь объект пользователя
+    return user;
   },
 );

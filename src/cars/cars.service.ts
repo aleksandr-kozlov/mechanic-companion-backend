@@ -120,12 +120,10 @@ export class CarsService {
    */
   async create(userId: string, dto: CreateCarDto) {
     // Проверка уникальности госномера в рамках пользователя
-    const existingCar = await this.prisma.car.findUnique({
+    const existingCar = await this.prisma.car.findFirst({
       where: {
-        userId_licensePlate: {
-          userId,
-          licensePlate: dto.licensePlate,
-        },
+        userId,
+        licensePlate: dto.licensePlate,
       },
     });
 
