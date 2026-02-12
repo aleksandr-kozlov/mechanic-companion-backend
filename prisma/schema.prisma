@@ -68,17 +68,14 @@ model Car {
   ownerName      String?   @map("owner_name")
   ownerPhone     String?   @map("owner_phone")
   ownerEmail     String?   @map("owner_email")
-  mainPhotoUrl   String?   @map("main_photo_url")
   notes          String?
   lastVisitDate  DateTime? @map("last_visit_date")
   visitsCount    Int       @default(0) @map("visits_count")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  photos    CarPhoto[]
-  documents CarDocument[]
-  visits    Visit[]
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  visits Visit[]
 
   @@unique([userId, licensePlate])
   @@map("cars")
@@ -86,30 +83,6 @@ model Car {
   @@index([licensePlate])
 }
 
-model CarPhoto {
-  id        String   @id @default(uuid())
-  carId     String   @map("car_id")
-  photoUrl  String   @map("photo_url")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  car Car @relation(fields: [carId], references: [id], onDelete: Cascade)
-
-  @@map("car_photos")
-  @@index([carId])
-}
-
-model CarDocument {
-  id           String   @id @default(uuid())
-  carId        String   @map("car_id")
-  documentUrl  String   @map("document_url")
-  documentName String   @map("document_name")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  car Car @relation(fields: [carId], references: [id], onDelete: Cascade)
-
-  @@map("car_documents")
-  @@index([carId])
-}
 
 enum WorkType {
   DETAILING
@@ -147,31 +120,12 @@ model Visit {
   updatedAt               DateTime     @updatedAt @map("updated_at")
 
   car       Car              @relation(fields: [carId], references: [id], onDelete: Cascade)
-  photos    VisitPhoto[]
   materials VisitMaterial[]
   documents VisitDocument[]
 
   @@map("visits")
   @@index([carId])
   @@index([status])
-}
-
-enum PhotoType {
-  BEFORE
-  AFTER
-}
-
-model VisitPhoto {
-  id        String    @id @default(uuid())
-  visitId   String    @map("visit_id")
-  photoUrl  String    @map("photo_url")
-  photoType PhotoType @map("photo_type")
-  createdAt DateTime  @default(now()) @map("created_at")
-
-  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
-
-  @@map("visit_photos")
-  @@index([visitId])
 }
 
 model VisitMaterial {
@@ -189,11 +143,13 @@ model VisitMaterial {
 }
 
 model VisitDocument {
-  id           String   @id @default(uuid())
-  visitId      String   @map("visit_id")
-  documentUrl  String   @map("document_url")
-  documentName String   @map("document_name")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  visitId   String   @map("visit_id")
+  fileName  String   @map("file_name")
+  fileUrl   String   @map("file_url")
+  mimeType  String   @map("mime_type")
+  fileSize  Int      @map("file_size")
+  createdAt DateTime @default(now()) @map("created_at")
 
   visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 

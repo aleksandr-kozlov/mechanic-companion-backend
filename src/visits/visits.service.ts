@@ -9,7 +9,6 @@ import { CreateVisitDto } from './dto/create-visit.dto';
 import { UpdateVisitDto } from './dto/update-visit.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { QueryVisitsDto } from './dto/query-visits.dto';
-import { PhotoType } from '@prisma/client';
 import sharp from 'sharp';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -70,19 +69,9 @@ export class VisitsService {
             price: true,
           },
         },
-        photos: {
-          select: {
-            id: true,
-            photoUrl: true,
-            photoType: true,
-            createdAt: true,
-          },
-          orderBy: { createdAt: 'asc' },
-        },
         _count: {
           select: {
             materials: true,
-            photos: true,
             documents: true,
           },
         },
@@ -114,13 +103,9 @@ export class VisitsService {
       orderBy: { visitDate: 'desc' },
       include: {
         materials: true,
-        photos: {
-          orderBy: { createdAt: 'asc' },
-        },
         _count: {
           select: {
             materials: true,
-            photos: true,
             documents: true,
           },
         },
@@ -139,9 +124,6 @@ export class VisitsService {
       include: {
         car: true,
         materials: {
-          orderBy: { createdAt: 'asc' },
-        },
-        photos: {
           orderBy: { createdAt: 'asc' },
         },
         documents: {
@@ -252,7 +234,6 @@ export class VisitsService {
       include: {
         car: true,
         materials: true,
-        photos: true,
         documents: true,
       },
     });
@@ -272,15 +253,11 @@ export class VisitsService {
     const visit = await this.findOne(id, userId);
 
     // Получить все файлы для удаления
-    const photos = await this.prisma.visitPhoto.findMany({
-      where: { visitId: id },
-    });
-
     const documents = await this.prisma.visitDocument.findMany({
       where: { visitId: id },
     });
 
-    // Удалить визит из БД (каскадное удаление материалов, фото, документов)
+    // Удалить визит из БД (каскадное удаление материалов, документов)
     await this.prisma.$transaction(async (prisma) => {
       await prisma.visit.delete({
         where: { id },
@@ -299,10 +276,7 @@ export class VisitsService {
     await this.updateCarLastVisitDate(visit.carId);
 
     // Физически удалить файлы
-    const allFiles = [
-      ...photos.map((p) => p.photoUrl),
-      ...documents.map((d) => d.documentUrl),
-    ];
+    const allFiles = documents.map((d) => d.fileUrl);
 
     await this.deleteFiles(allFiles);
 
@@ -330,106 +304,6 @@ export class VisitsService {
   }
 
   /**
-   * Загрузить фото визита
-   */
-  async uploadPhotos(
-    id: string,
-    userId: string,
-    files: Express.Multer.File[],
-    photoType: PhotoType,
-  ) {
-    const visit = await this.findOne(id, userId);
-
-    // Проверка количества существующих фото
-    const existingPhotosCount = await this.prisma.visitPhoto.count({
-      where: { visitId: id },
-    });
-
-    if (existingPhotosCount + files.length > 10) {
-      throw new BadRequestException(
-        `Максимум 10 фото на визит. Сейчас загружено ${existingPhotosCount}`,
-      );
-    }
-
-    // Создать директорию
-    const photoTypeDir = photoType === 'BEFORE' ? 'before' : 'after';
-    const uploadDir = path.join(
-      process.cwd(),
-      'uploads',
-      visit.car.userId,
-      'visit-photos',
-      photoTypeDir,
-    );
-    await fs.mkdir(uploadDir, { recursive: true });
-
-    const uploadedPhotos = [];
-
-    for (const file of files) {
-      // Генерировать уникальное имя
-      const filename = `${uuidv4()}.jpg`;
-      const filepath = path.join(uploadDir, filename);
-
-      // Сжать и сохранить
-      await sharp(file.buffer)
-        .resize(1920, 1080, {
-          fit: 'inside',
-          withoutEnlargement: true,
-        })
-        .jpeg({ quality: 80 })
-        .toFile(filepath);
-
-      const photoUrl = `/api/files/${visit.car.userId}/visit-photos/${photoTypeDir}/${filename}`;
-
-      // Сохранить в БД
-      const photo = await this.prisma.visitPhoto.create({
-        data: {
-          visitId: id,
-          photoUrl,
-          photoType,
-        },
-      });
-
-      uploadedPhotos.push(photo);
-    }
-
-    return uploadedPhotos;
-  }
-
-  /**
-   * Удалить фото визита
-   */
-  async deletePhoto(photoId: string, userId: string) {
-    const photo = await this.prisma.visitPhoto.findUnique({
-      where: { id: photoId },
-      include: {
-        visit: {
-          include: {
-            car: true,
-          },
-        },
-      },
-    });
-
-    if (!photo) {
-      throw new NotFoundException('Фото не найдено');
-    }
-
-    if (photo.visit.car.userId !== userId) {
-      throw new ForbiddenException('Доступ запрещен');
-    }
-
-    // Удалить из БД
-    await this.prisma.visitPhoto.delete({
-      where: { id: photoId },
-    });
-
-    // Физически удалить файл
-    await this.deleteFiles([photo.photoUrl]);
-
-    return { success: true, message: 'Фото успешно удалено' };
-  }
-
-  /**
    * Получить документы визита
    */
   async getDocuments(visitId: string, userId: string) {
@@ -444,15 +318,25 @@ export class VisitsService {
   }
 
   /**
-   * Загрузить документ визита
+   * Загрузить документ визита (изображение, PDF, DOC, DOCX)
    */
   async uploadDocument(
     visitId: string,
     userId: string,
     file: Express.Multer.File,
-    documentName: string,
   ) {
     const visit = await this.findOne(visitId, userId);
+
+    // Проверить количество существующих документов
+    const existingCount = await this.prisma.visitDocument.count({
+      where: { visitId },
+    });
+
+    if (existingCount >= 10) {
+      throw new BadRequestException(
+        'Максимум 10 документов на визит',
+      );
+    }
 
     // Создать директорию
     const uploadDir = path.join(
@@ -463,21 +347,35 @@ export class VisitsService {
     );
     await fs.mkdir(uploadDir, { recursive: true });
 
-    // Сохранить файл
     const ext = path.extname(file.originalname);
     const filename = `${uuidv4()}${ext}`;
     const filepath = path.join(uploadDir, filename);
 
-    await fs.writeFile(filepath, file.buffer);
+    // Если это изображение, сжать его
+    const isImage = file.mimetype.startsWith('image/');
+    if (isImage) {
+      await sharp(file.buffer)
+        .resize(1920, 1080, {
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .jpeg({ quality: 80 })
+        .toFile(filepath);
+    } else {
+      // Сохранить как есть для документов
+      await fs.writeFile(filepath, file.buffer);
+    }
 
-    const documentUrl = `/api/files/${visit.car.userId}/visit-documents/${filename}`;
+    const fileUrl = `/api/files/${visit.car.userId}/visit-documents/${filename}`;
 
     // Сохранить в БД
     const document = await this.prisma.visitDocument.create({
       data: {
         visitId,
-        documentName: documentName || file.originalname,
-        documentUrl,
+        fileName: file.originalname,
+        fileUrl,
+        mimeType: file.mimetype,
+        fileSize: file.size,
       },
     });
 
@@ -513,7 +411,7 @@ export class VisitsService {
     });
 
     // Физически удалить файл
-    await this.deleteFiles([document.documentUrl]);
+    await this.deleteFiles([document.fileUrl]);
 
     return { success: true, message: 'Документ успешно удален' };
   }

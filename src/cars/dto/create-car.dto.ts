@@ -65,7 +65,10 @@ export class CreateCarDto {
   @Matches(/^[A-HJ-NPR-Z0-9]{17}$/, {
     message: 'VIN должен содержать только латинские буквы (кроме I, O, Q) и цифры',
   })
-  @Transform(({ value }) => value?.trim().toUpperCase())
+  @Transform(({ value }) => {
+    if (!value || value.trim() === '') return undefined;
+    return value.trim().toUpperCase();
+  })
   vin?: string;
 
   @ApiProperty({
@@ -95,7 +98,10 @@ export class CreateCarDto {
   })
   @IsOptional()
   @IsEmail({}, { message: 'Неверный формат email' })
-  @Transform(({ value }) => value?.trim().toLowerCase())
+  @Transform(({ value }) => {
+    if (!value || value.trim() === '') return undefined;
+    return value.trim().toLowerCase();
+  })
   ownerEmail?: string;
 
   @ApiPropertyOptional({
@@ -104,6 +110,9 @@ export class CreateCarDto {
   })
   @IsOptional()
   @IsString({ message: 'Заметки должны быть строкой' })
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => {
+    if (!value || value.trim() === '') return undefined;
+    return value.trim();
+  })
   notes?: string;
 }
