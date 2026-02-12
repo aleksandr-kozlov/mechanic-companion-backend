@@ -34,7 +34,6 @@ import { QueryVisitsDto } from './dto/query-visits.dto';
 import { SendReportDto } from './dto/send-report.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { PhotoType } from '@prisma/client';
 import { PdfService } from '../pdf/pdf.service';
 import { MailService } from '../mail/mail.service';
 
@@ -112,62 +111,6 @@ export class VisitsController {
   }
 
   /**
-   * POST /api/visits/:id/photos - Загрузить фото визита
-   * Body: photoType=before|after, photos (files)
-   */
-  @Post(':id/photos')
-  @UseInterceptors(
-    FilesInterceptor('photos', 10, {
-      limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB
-      },
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
-          return callback(
-            new BadRequestException('Поддерживаются только JPG и PNG'),
-            false,
-          );
-        }
-        callback(null, true);
-      },
-    }),
-  )
-  async uploadPhotos(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-    @UploadedFiles() files: Express.Multer.File[],
-    @Body('photoType') photoType: string,
-  ) {
-    if (!files || files.length === 0) {
-      throw new BadRequestException('Файлы не загружены');
-    }
-
-    if (!photoType || !['BEFORE', 'AFTER'].includes(photoType.toUpperCase())) {
-      throw new BadRequestException(
-        'Тип фото должен быть BEFORE или AFTER',
-      );
-    }
-
-    return this.visitsService.uploadPhotos(
-      id,
-      userId,
-      files,
-      photoType.toUpperCase() as PhotoType,
-    );
-  }
-
-  /**
-   * DELETE /api/visits/photos/:photoId - Удалить фото визита
-   */
-  @Delete('photos/:photoId')
-  async deletePhoto(
-    @Param('photoId') photoId: string,
-    @CurrentUser('id') userId: string,
-  ) {
-    return this.visitsService.deletePhoto(photoId, userId);
-  }
-
-  /**
    * GET /api/visits/:visitId/documents - Получить документы визита
    */
   @Get(':visitId/documents')
@@ -179,16 +122,23 @@ export class VisitsController {
   }
 
   /**
-   * POST /api/visits/:visitId/documents - Загрузить документ визита
+   * POST /api/visits/:id/documents - Загрузить документ визита (изображение или файл)
    */
-  @Post(':visitId/documents')
+  @Post(':id/documents')
   @UseInterceptors(
-    FileInterceptor('document', {
+    FileInterceptor('file', {
       limits: {
         fileSize: 20 * 1024 * 1024, // 20MB
       },
       fileFilter: (req, file, callback) => {
         const allowedMimes = [
+          // Изображения
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/heic',
+          'image/heif',
+          // Документы
           'application/pdf',
           'application/msword',
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -196,7 +146,9 @@ export class VisitsController {
 
         if (!allowedMimes.includes(file.mimetype)) {
           return callback(
-            new BadRequestException('Поддерживаются только PDF, DOC, DOCX'),
+            new BadRequestException(
+              'Поддерживаются только изображения (JPEG, PNG, HEIC) и документы (PDF, DOC, DOCX)',
+            ),
             false,
           );
         }
@@ -204,33 +156,31 @@ export class VisitsController {
       },
     }),
   )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Загрузить документ или изображение для визита' })
   async uploadDocument(
-    @Param('visitId') visitId: string,
+    @Param('id') visitId: string,
     @CurrentUser('id') userId: string,
     @UploadedFile() file: Express.Multer.File,
-    @Body('documentName') documentName?: string,
   ) {
     if (!file) {
       throw new BadRequestException('Файл не загружен');
     }
 
-    return this.visitsService.uploadDocument(
-      visitId,
-      userId,
-      file,
-      documentName,
-    );
+    return this.visitsService.uploadDocument(visitId, userId, file);
   }
 
   /**
-   * DELETE /api/visits/documents/:id - Удалить документ визита
+   * DELETE /api/visits/:id/documents/:documentId - Удалить документ визита
    */
-  @Delete('documents/:id')
+  @Delete(':id/documents/:documentId')
+  @ApiOperation({ summary: 'Удалить документ визита' })
   async deleteDocument(
-    @Param('id') id: string,
+    @Param('id') visitId: string,
+    @Param('documentId') documentId: string,
     @CurrentUser('id') userId: string,
   ) {
-    return this.visitsService.deleteDocument(id, userId);
+    return this.visitsService.deleteDocument(documentId, userId);
   }
 
   /**
