@@ -38,6 +38,10 @@ RUN npm ci --only=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
+# Копировать шаблоны (они не компилируются TypeScript)
+COPY --from=builder /app/src/pdf/templates ./dist/pdf/templates
+COPY --from=builder /app/src/mail/templates ./dist/mail/templates
+
 RUN mkdir -p uploads tmp/pdf && chmod -R 777 uploads tmp
 
 EXPOSE 3000
