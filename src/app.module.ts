@@ -12,6 +12,7 @@ import { MailModule } from './mail/mail.module';
 import { PdfModule } from './pdf/pdf.module';
 import { ProfileModule } from './profile/profile.module';
 import configuration from './config/configuration';
+import {SettingsModule} from "./settings/settings.module";
 
 @Module({
   imports: [
@@ -44,6 +45,8 @@ import configuration from './config/configuration';
     PdfModule,
     // Profile
     ProfileModule,
+      // Settings
+    SettingsModule
   ],
   controllers: [AppController],
   providers: [AppService],
