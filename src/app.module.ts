@@ -11,6 +11,7 @@ import { MaterialsModule } from './materials/materials.module';
 import { MailModule } from './mail/mail.module';
 import { ProfileModule } from './profile/profile.module';
 import configuration from './config/configuration';
+import {SettingsModule} from "./settings/settings.module";
 
 @Module({
   imports: [
@@ -41,6 +42,8 @@ import configuration from './config/configuration';
     MailModule,
     // Profile
     ProfileModule,
+      // Settings
+    SettingsModule
   ],
   controllers: [AppController],
   providers: [AppService],
