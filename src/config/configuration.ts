@@ -23,9 +23,6 @@ export default () => ({
     maxImageSize: parseInt(process.env.MAX_IMAGE_SIZE, 10) || 10485760,
     maxDocumentSize: parseInt(process.env.MAX_DOCUMENT_SIZE, 10) || 20971520,
   },
-  pdf: {
-    tempDir: process.env.PDF_TEMP_DIR || './tmp/pdf',
-  },
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
   },
