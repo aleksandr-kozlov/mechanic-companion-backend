@@ -3,25 +3,29 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+RUN corepack enable
+
+COPY package.json yarn.lock .yarnrc.yml ./
 COPY prisma ./prisma/
 
-RUN npm ci
+RUN yarn install --immutable
 
 COPY . .
 
-RUN npx prisma generate
-RUN npm run build
+RUN yarn prisma:generate
+RUN yarn build
 
 # Stage 2: Production
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-COPY package*.json ./
+RUN corepack enable
+
+COPY package.json yarn.lock .yarnrc.yml ./
 COPY prisma ./prisma/
 
-RUN npm ci --only=production
+RUN yarn workspaces focus --all --production
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma

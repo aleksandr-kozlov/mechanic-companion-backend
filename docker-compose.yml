@@ -40,7 +40,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "npx prisma migrate deploy && npm run start:prod"
+    command: sh -c "yarn prisma migrate deploy && yarn start:prod"
     networks:
       - app-network
 
