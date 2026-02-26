@@ -18,18 +18,6 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Установка Puppeteer dependencies
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
 COPY package*.json ./
 COPY prisma ./prisma/
 
@@ -39,10 +27,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Копировать шаблоны (они не компилируются TypeScript)
-COPY --from=builder /app/src/pdf/templates ./dist/pdf/templates
 COPY --from=builder /app/src/mail/templates ./dist/mail/templates
 
-RUN mkdir -p uploads tmp/pdf && chmod -R 777 uploads tmp
+RUN mkdir -p uploads && chmod -R 777 uploads
 
 EXPOSE 3000
 
