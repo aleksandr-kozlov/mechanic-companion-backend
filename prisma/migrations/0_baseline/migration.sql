@@ -1,0 +1,2 @@
+-- Baseline: represents the existing state of the database before this project was introduced.
+-- This migration is intentionally empty.

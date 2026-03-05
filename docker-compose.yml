@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: mechanic_companion
+      POSTGRES_DB: baypad
     ports:
       - "5432:5432"
     volumes:
@@ -30,7 +30,7 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/mechanic_companion
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/baypad
       PORT: 3000
     env_file:
       - .env
@@ -40,7 +40,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "yarn prisma migrate deploy && yarn start:prod"
+    command: sh -c "yarn start:prod"
     networks:
       - app-network
 

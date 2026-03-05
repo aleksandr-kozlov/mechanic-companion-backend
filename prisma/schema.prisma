@@ -26,7 +26,7 @@ model User {
   refreshTokens RefreshToken[]
   passwordResetTokens PasswordResetToken[]
 
-  @@map("users")
+  @@map("baypad_users")
 }
 
 model RefreshToken {
@@ -38,7 +38,7 @@ model RefreshToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("refresh_tokens")
+  @@map("baypad_refresh_tokens")
   @@index([userId])
 }
 
@@ -52,7 +52,7 @@ model PasswordResetToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("password_reset_tokens")
+  @@map("baypad_password_reset_tokens")
   @@index([userId])
   @@index([token])
 }
@@ -78,7 +78,7 @@ model Car {
   visits Visit[]
 
   @@unique([userId, licensePlate])
-  @@map("cars")
+  @@map("baypad_cars")
   @@index([userId])
   @@index([licensePlate])
 }
@@ -123,7 +123,7 @@ model Visit {
   materials VisitMaterial[]
   documents VisitDocument[]
 
-  @@map("visits")
+  @@map("baypad_visits")
   @@index([carId])
   @@index([status])
 }
@@ -138,7 +138,7 @@ model VisitMaterial {
 
   visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 
-  @@map("visit_materials")
+  @@map("baypad_visit_materials")
   @@index([visitId])
 }
 
@@ -153,6 +153,6 @@ model VisitDocument {
 
   visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 
-  @@map("visit_documents")
+  @@map("baypad_visit_documents")
   @@index([visitId])
 }
